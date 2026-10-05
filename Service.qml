@@ -1,0 +1,146 @@
+import QtQuick
+import Quickshell
+import Quickshell.Io
+import Quickshell.Hyprland
+
+// Shared background state for both Panel.qml and BarWidget.qml: the CSV
+// watcher, MangoHud.conf provisioning, and the user settings file all live
+// here once so neither entry point duplicates them. The shell auto-injects
+// this into Panel via `service`; BarWidget looks it up explicitly through
+// `bar.shell.serviceFor("game-overlay")`.
+Item {
+  id: root
+
+  property var shell: null
+
+  readonly property string watchScript: Qt.resolvedUrl("watch-latest.sh").toString().replace("file://", "")
+  readonly property string ensureConfigScript: Qt.resolvedUrl("ensure-mangohud-config.sh").toString().replace("file://", "")
+
+  property real fpsVal: 0
+  property real cpuLoad: 0
+  property real cpuTemp: 0
+  property real gpuLoad: 0
+  property real gpuTemp: 0
+  property real lastUpdateMs: 0
+
+  // Date.now() isn't a QML binding dependency, so `live` is re-evaluated on
+  // every heartbeat tick instead of only once at startup.
+  property int heartbeat: 0
+  readonly property bool live: heartbeat >= 0 && (Date.now() - root.lastUpdateMs) < 2200
+
+  // Only show on the monitor that actually has the fullscreen game on it —
+  // layer-shell surfaces are per-output, so without this the pill would
+  // otherwise follow the user to every workspace/monitor they switch to.
+  // Scanning each toplevel's own fullscreen flag directly (rather than trusting
+  // the workspace-level `hasFullscreen` aggregate, which didn't track correctly
+  // in practice) so this matches exactly what `hyprctl clients -j` reports.
+  function workspaceHasFullscreenWindow(ws) {
+    if (!ws) return false
+    var tops = ws.toplevels.values
+    for (var i = 0; i < tops.length; i++) {
+      var ipc = tops[i].lastIpcObject
+      if (ipc && ipc.fullscreen) return true
+    }
+    return false
+  }
+
+  // CSV columns (MangoHud logging.cpp):
+  // fps, frametime, cpu_load, cpu_power, gpu_load, cpu_temp, gpu_temp, ...
+  function parseLine(line) {
+    var parts = line.split(",")
+    if (parts.length < 7) return
+    var f = parseFloat(parts[0])
+    if (!isFinite(f)) return // header row or garbage, ignore
+    root.fpsVal = f
+    root.cpuLoad = parseFloat(parts[2])
+    root.gpuLoad = parseFloat(parts[4])
+    root.cpuTemp = parseFloat(parts[5])
+    root.gpuTemp = parseFloat(parts[6])
+    root.lastUpdateMs = Date.now()
+  }
+
+  function fmtPct(v) { return (isFinite(v) ? Math.round(v) : 0) + "%" }
+  function fmtTemp(v, fahrenheit) {
+    var c = isFinite(v) ? v : 0
+    var t = fahrenheit ? c * 9 / 5 + 32 : c
+    return Math.round(t) + "°" + (fahrenheit ? "F" : "C")
+  }
+  function fmtFps(v) { return String(isFinite(v) ? Math.round(v) : 0) }
+
+  // User-adjustable: panel/bar-widget settings UIs in Omarchy are either
+  // schema-driven (bar-widget only, and that writes into shell.json rather
+  // than a plugin-owned file) or nonexistent (panel). This file is our own
+  // customization surface instead, shared by both entry points — hand-edit
+  // it directly, or use the bar-widget's popup, and either way it reloads
+  // live. Auto-created with these defaults the first time it's missing.
+  FileView {
+    id: settingsFile
+    // Deliberately NOT under this plugin's own directory: Omarchy's plugin
+    // hot-reload watches that whole folder for source changes, so writing
+    // settings there was triggering a full "Local plugin changed, reloading"
+    // cycle on every single settings change — tearing down and recreating
+    // the bar widget (closing its popup) as if from a code edit.
+    path: Quickshell.env("HOME") + "/.config/omarchy/game-overlay-settings.json"
+    watchChanges: true
+    onFileChanged: reload()
+    // Loading a file that doesn't exist yet only warns and falls back to the
+    // JsonAdapter's declared defaults below — it doesn't create the file on
+    // its own, so write it out once here to give users a real template.
+    onLoadFailed: function(error) {
+      if (error === FileViewError.FileNotFound) writeAdapter()
+    }
+
+    JsonAdapter {
+      id: settingsAdapter
+      property int fontSize: 16
+      property string labelColor: "#6C9BD9"
+      property string backgroundColor: "#101518"
+      property real backgroundOpacity: 0.85
+      // One of: top-left, top-center, top-right, bottom-left, bottom-center,
+      // bottom-right.
+      property string position: "top-center"
+      // When true, labelColor/backgroundColor are ignored in favor of the
+      // live Omarchy theme's accent/popup colors.
+      property bool followTheme: false
+      property bool fahrenheit: false
+    }
+  }
+
+  // Exposed as a real property (an `id` alone isn't reachable from outside
+  // this file) so Panel.qml and BarWidget.qml can both read/write it via
+  // `service.settings.xxx`.
+  readonly property var settings: settingsAdapter
+  // Called after the bar-widget's settings popup changes a value — JsonAdapter
+  // updates the in-memory property immediately either way, but this is what
+  // actually writes it back to disk.
+  function saveSettings() { settingsFile.writeAdapter() }
+
+  Timer {
+    interval: 500
+    running: true
+    repeat: true
+    onTriggered: {
+      // A freshly-created toplevel (e.g. right after a game relaunch) often
+      // never gets its fullscreen info delivered via Hyprland's incremental
+      // event stream, leaving lastIpcObject permanently undefined. Forcing a
+      // full re-sync here keeps it populated regardless.
+      Hyprland.refreshToplevels()
+      root.heartbeat++
+    }
+  }
+
+  // One-shot, runs once per plugin load: makes sure MangoHud.conf has what
+  // this plugin needs, without touching anything it doesn't (see the script
+  // itself for the safe-merge/notify-instead-of-overwrite logic).
+  Process {
+    command: ["bash", root.ensureConfigScript]
+    running: true
+  }
+
+  Process {
+    id: watcher
+    command: ["bash", root.watchScript]
+    stdout: SplitParser { onRead: function(line) { root.parseLine(line) } }
+    running: true
+  }
+}
