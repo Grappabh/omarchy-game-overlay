@@ -68,12 +68,6 @@ to open a settings popup:
   value directly).
 - **°C / °F** — a switch for which unit temperatures are shown in.
 
-Every change applies instantly to the live overlay — no restart, ever (that
-only matters for *developing* the plugin itself, not for using it).
-
-Note: the bar itself auto-hides while a game is fullscreen (standard Omarchy
-behavior, not specific to this plugin), so the bar item is really only
-reachable in windowed/borderless play, or between sessions.
 
 You can also hand-edit `~/.config/omarchy/game-overlay-settings.json` directly
 (auto-created with defaults on first load) — same live-reload, no restart
