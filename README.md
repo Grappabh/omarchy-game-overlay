@@ -70,11 +70,9 @@ to open a settings popup:
 
 
 You can also hand-edit `~/.config/omarchy/game-overlay-settings.json` directly
-(auto-created with defaults on first load) — same live-reload, no restart
-needed either way. It's deliberately *not* inside this plugin's own folder:
+(auto-created with defaults on first load). It's deliberately *not* inside this plugin's own folder:
 Omarchy's plugin hot-reload watches that whole folder for source changes, so
-a settings file living there would trigger a full plugin reload (closing
-the popup) on every single change from the UI above.
+a settings file living there would trigger a full plugin reload on every single change in the settings.
 
 ```json
 {
