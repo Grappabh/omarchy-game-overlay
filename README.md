@@ -64,7 +64,6 @@ to open a settings popup:
   value directly).
 - **°C / °F** — a switch for which unit temperatures are shown in.
 
-
 You can also hand-edit `~/.config/omarchy/game-overlay-settings.json` directly
 (auto-created with defaults on first load). It's deliberately *not* inside this plugin's own folder:
 Omarchy's plugin hot-reload watches that whole folder for source changes, so
@@ -101,14 +100,6 @@ hl.env("MANGOHUD", "1")
 `env = MANGOHUD,1` in your `hyprland.conf`.) Reload Hyprland (`hyprctl
 reload`) after adding it.
 
-## Credits
-
-Bundles [Open Sans](https://www.opensans.com) (SIL Open Font License 1.1).
-
-## License
-
-MIT — see [LICENSE](LICENSE).
-
 ## How it works
 
 - MangoHud runs invisibly (`alpha=0`) and continuously logs fps/cpu/gpu
@@ -128,3 +119,11 @@ MIT — see [LICENSE](LICENSE).
   something the plugin controls.
 - The bar item (and its settings popup) is only reachable while the bar
   itself is visible, which Omarchy hides during fullscreen games — see above.
+
+## Credits
+
+Bundles [Open Sans](https://www.opensans.com) (SIL Open Font License 1.1).
+
+## License
+
+MIT — see [LICENSE](LICENSE).
