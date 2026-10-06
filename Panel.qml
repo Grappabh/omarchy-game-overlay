@@ -11,6 +11,17 @@ Item {
 
   property var service: null
 
+  // Shape contract for shell.summon/hide/toggle: because our manifest's
+  // kinds include "panel", any shell.toggle("game-overlay") call (notably
+  // from the Super+Ctrl+1-9 bar hotkeys) is routed to THIS entry point
+  // rather than the bar widget's own open()/close() — see
+  // isBarWidgetPanelPlugin in the host's shell.qml. Forwarding to the same
+  // shared service flag BarWidget.qml's popup watches means the hotkey and
+  // a direct click on the bar icon end up controlling the same popup.
+  readonly property bool opened: service ? service.popupOpen : false
+  function open() { if (root.service) root.service.popupOpen = true }
+  function close() { if (root.service) root.service.popupOpen = false }
+
   readonly property int pillFontSize: service ? service.settings.fontSize : 16
 
   readonly property bool followTheme: service ? service.settings.followTheme : false
@@ -55,7 +66,7 @@ Item {
         // arrives a beat later over IPC), and relying solely on its change
         // signal left this stuck at `false`.
         readonly property bool onThisScreen: root.service && (root.service.heartbeat, screenLoader.myMonitor ? root.service.workspaceHasFullscreenWindow(screenLoader.myMonitor.activeWorkspace) : false)
-        active: root.service && root.service.live && screenLoader.onThisScreen
+        active: root.service && root.service.live && screenLoader.onThisScreen && root.service.settings.overlayVisible
 
         sourceComponent: PanelWindow {
           screen: screenLoader.modelData
@@ -71,15 +82,18 @@ Item {
 
           Rectangle {
             id: pill
-            anchors.top: root.posTop ? parent.top : undefined
-            anchors.bottom: root.posBottom ? parent.bottom : undefined
-            anchors.left: root.posLeft ? parent.left : undefined
-            anchors.right: root.posRight ? parent.right : undefined
-            anchors.horizontalCenter: root.posCenterH ? parent.horizontalCenter : undefined
-            anchors.topMargin: 16
-            anchors.bottomMargin: 16
-            anchors.leftMargin: 16
-            anchors.rightMargin: 16
+            readonly property int edgeMargin: 16
+
+            // Plain x/y instead of anchors: toggling 4 separate anchor line
+            // bindings (top/bottom/left/right) on a position switch isn't
+            // atomic — QML can briefly apply e.g. the new top anchor before
+            // the old bottom one clears, and a conflicting pair of anchors
+            // overrides the explicit width/height below with a stretch-to-fill,
+            // which then doesn't reliably unstick. A single x/y expression per
+            // axis has no such transient conflicting state to get stuck in.
+            x: root.posCenterH ? (parent.width - width) / 2
+              : (root.posRight ? parent.width - width - edgeMargin : edgeMargin)
+            y: root.posBottom ? parent.height - height - edgeMargin : edgeMargin
             width: content.implicitWidth + 44
             height: content.implicitHeight + 20
             radius: height / 2
@@ -90,23 +104,28 @@ Item {
               anchors.centerIn: parent
               spacing: 22
 
+              // No anchors here: these are direct children of the "content"
+              // Row above, and anchoring a Positioner's child to its parent
+              // (even just verticalCenter) fights the Positioner's own layout
+              // pass — it was producing a runaway implicitHeight on "content"
+              // (and hence this pill, since height is derived from it)
+              // whenever the pill's own anchors changed, i.e. on every
+              // position switch. All three rows already share the same
+              // font.pixelSize, so they're already the same height without it.
               Row {
                 spacing: 7
-                anchors.verticalCenter: parent.verticalCenter
                 Text { text: "CPU"; color: root.effectiveLabelColor; font.family: pillFont.name; font.pixelSize: root.pillFontSize }
                 Text { text: root.service ? root.service.fmtPct(root.service.cpuLoad) : ""; color: "white"; font.family: pillFont.name; font.pixelSize: root.pillFontSize }
                 Text { text: root.service ? root.service.fmtTemp(root.service.cpuTemp, root.service.settings.fahrenheit) : ""; color: "white"; font.family: pillFont.name; font.pixelSize: root.pillFontSize }
               }
               Row {
                 spacing: 7
-                anchors.verticalCenter: parent.verticalCenter
                 Text { text: "GPU"; color: root.effectiveLabelColor; font.family: pillFont.name; font.pixelSize: root.pillFontSize }
                 Text { text: root.service ? root.service.fmtPct(root.service.gpuLoad) : ""; color: "white"; font.family: pillFont.name; font.pixelSize: root.pillFontSize }
                 Text { text: root.service ? root.service.fmtTemp(root.service.gpuTemp, root.service.settings.fahrenheit) : ""; color: "white"; font.family: pillFont.name; font.pixelSize: root.pillFontSize }
               }
               Row {
                 spacing: 7
-                anchors.verticalCenter: parent.verticalCenter
                 Text { text: "FPS"; color: root.effectiveLabelColor; font.family: pillFont.name; font.pixelSize: root.pillFontSize }
                 Text { text: root.service ? root.service.fmtFps(root.service.fpsVal) : ""; color: "white"; font.family: pillFont.name; font.pixelSize: root.pillFontSize }
               }

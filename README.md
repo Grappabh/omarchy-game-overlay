@@ -72,6 +72,11 @@ to open a settings popup:
 - **Label color** / **Background** — hex color fields (type a `#rrggbb`
   value directly).
 - **°C / °F** — a switch for which unit temperatures are shown in.
+- **Show/hide shortcut** — a pill showing the current keyboard shortcut for
+  toggling the overlay on/off while a game is running (default
+  **Super+Ctrl+G**). Click it, then press the key combination you want
+  (needs at least one modifier — Ctrl/Shift/Alt/Super); it updates live, no
+  restart needed. Escape cancels without changing anything.
 
 You can also hand-edit `~/.config/omarchy/game-overlay-settings.json` directly
 (auto-created with defaults on first load). It's deliberately *not* inside this plugin's own folder:
@@ -86,9 +91,15 @@ a settings file living there would trigger a full plugin reload on every single 
   "backgroundOpacity": 0.85,
   "position": "top-center",
   "followTheme": false,
-  "fahrenheit": false
+  "fahrenheit": false,
+  "overlayVisible": true,
+  "shortcut": "SUPER CTRL, G"
 }
 ```
+
+`shortcut` uses Hyprland's own bind syntax (space-separated modifiers, comma,
+then the key) — easiest to change via the popup's recorder pill rather than
+by hand.
 
 `position` is one of `top-left`, `top-center`, `top-right`, `bottom-left`,
 `bottom-center`, `bottom-right`.
@@ -119,6 +130,14 @@ reload`) after adding it.
   monitor it's on currently displays a fullscreen window — so it won't
   follow you to other workspaces, and on multi-monitor setups it only
   appears on the screen that actually has the game.
+- The bar item's settings popup (and the show/hide shortcut) both work
+  while a game is fullscreen, the same way bluetooth/network's popups do —
+  they're real layer-shell surfaces, not something tied to the bar's own
+  visibility.
+- The show/hide shortcut is applied two ways: live immediately (so a
+  freshly recorded one works without restarting anything), and persisted to
+  `~/.config/hypr/game-overlay-shortcut.conf` (sourced once from
+  `hyprland.conf`) so it survives an actual Hyprland restart too.
 
 ## Known limitations
 
@@ -126,8 +145,6 @@ reload`) after adding it.
   screens, resolution changes), which can make the pill briefly flicker off
   and self-recover within a second or two. This is the game's behavior, not
   something the plugin controls.
-- The bar item (and its settings popup) is only reachable while the bar
-  itself is visible, which Omarchy hides during fullscreen games — see above.
 
 ## Credits
 

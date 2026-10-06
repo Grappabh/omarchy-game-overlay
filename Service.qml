@@ -16,6 +16,16 @@ Item {
   readonly property string watchScript: Qt.resolvedUrl("watch-latest.sh").toString().replace("file://", "")
   readonly property string ensureConfigScript: Qt.resolvedUrl("ensure-mangohud-config.sh").toString().replace("file://", "")
   readonly property string ensureHyprlandEnvScript: Qt.resolvedUrl("ensure-hyprland-env.sh").toString().replace("file://", "")
+  readonly property string ensureShortcutScript: Qt.resolvedUrl("ensure-hyprland-shortcut.sh").toString().replace("file://", "")
+
+  // Transient, not persisted. Shared between BarWidget.qml and Panel.qml so
+  // both can drive the same popup: our manifest's kinds include "panel" (for
+  // the always-on overlay pill), which makes shell.toggle(id) — the path
+  // Super+Ctrl+1-9 and other IPC-driven opens use — route to the "panel"
+  // entry point (Panel.qml) instead of the bar widget's own open()/close().
+  // Panel.qml's open()/close() flip this flag; BarWidget's PopupCard watches
+  // it the same way a direct click on the bar icon does.
+  property bool popupOpen: false
 
   property real fpsVal: 0
   property real cpuLoad: 0
@@ -87,8 +97,18 @@ Item {
     // Loading a file that doesn't exist yet only warns and falls back to the
     // JsonAdapter's declared defaults below — it doesn't create the file on
     // its own, so write it out once here to give users a real template.
+    // Besides the defaults-fallback above, this is also the one point where
+    // the real persisted (or just-defaulted) values are known, so it's the
+    // right place to sync the Hyprland shortcut once per load — not a
+    // standalone always-running Process, since that would read the
+    // JsonAdapter's declared default before this async load had a chance to
+    // overwrite it with whatever the user last recorded.
+    onLoaded: root.applyShortcut()
     onLoadFailed: function(error) {
-      if (error === FileViewError.FileNotFound) writeAdapter()
+      if (error === FileViewError.FileNotFound) {
+        writeAdapter()
+        root.applyShortcut()
+      }
     }
 
     JsonAdapter {
@@ -104,6 +124,14 @@ Item {
       // live Omarchy theme's accent/popup colors.
       property bool followTheme: false
       property bool fahrenheit: false
+      // Whether the overlay pill itself is shown while a game is live —
+      // toggled by the Hyprland shortcut below (and only by it; the bar
+      // widget and its settings popup stay available regardless, so the
+      // user always has a way back in if they forget the shortcut).
+      property bool overlayVisible: true
+      // Hyprland bind syntax: "<space-separated mods>, <key>", e.g.
+      // "SUPER CTRL, G". Applied via ensure-hyprland-shortcut.sh.
+      property string shortcut: "SUPER CTRL, G"
     }
   }
 
@@ -115,6 +143,25 @@ Item {
   // updates the in-memory property immediately either way, but this is what
   // actually writes it back to disk.
   function saveSettings() { settingsFile.writeAdapter() }
+
+  // Syncs the Hyprland-side keybind to settings.shortcut: once per load (see
+  // the FileView handlers above) and again whenever the user records a new
+  // one from the bar widget's settings popup.
+  function applyShortcut() {
+    Quickshell.execDetached(["bash", root.ensureShortcutScript, root.settings.shortcut])
+  }
+
+  // Hit by the Hyprland keybind ensure-hyprland-shortcut.sh sets up
+  // ("omarchy-shell game-overlay toggleVisibility"). A plain show/hide flag
+  // rather than routing through the host's shell.toggle(id) machinery, since
+  // that's keyed to the popup (see popupOpen above), not the pill.
+  IpcHandler {
+    target: "game-overlay"
+    function toggleVisibility(): void {
+      root.settings.overlayVisible = !root.settings.overlayVisible
+      root.saveSettings()
+    }
+  }
 
   Timer {
     interval: 500
