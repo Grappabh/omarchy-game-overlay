@@ -15,6 +15,7 @@ Item {
 
   readonly property string watchScript: Qt.resolvedUrl("watch-latest.sh").toString().replace("file://", "")
   readonly property string ensureConfigScript: Qt.resolvedUrl("ensure-mangohud-config.sh").toString().replace("file://", "")
+  readonly property string ensureHyprlandEnvScript: Qt.resolvedUrl("ensure-hyprland-env.sh").toString().replace("file://", "")
 
   property real fpsVal: 0
   property real cpuLoad: 0
@@ -134,6 +135,15 @@ Item {
   // itself for the safe-merge/notify-instead-of-overwrite logic).
   Process {
     command: ["bash", root.ensureConfigScript]
+    running: true
+  }
+
+  // One-shot: makes sure MANGOHUD=1 is set globally in Hyprland's own config
+  // (the one setup step that truly can't be done from inside Quickshell) so
+  // enabling the plugin alone is enough — no manual config editing required.
+  // Additive-only and self-validating; see the script for the rollback logic.
+  Process {
+    command: ["bash", root.ensureHyprlandEnvScript]
     running: true
   }
 

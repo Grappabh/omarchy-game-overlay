@@ -18,22 +18,6 @@ Install MangoHud itself (the plugin drives it, but doesn't install it):
 sudo pacman -S mangohud lib32-mangohud
 ```
 
-Add this line to your `~/.config/hypr/hyprland.lua`, in the personal
-overrides section near the bottom:
-
-```lua
-hl.env("MANGOHUD", "1")
-```
-
-(If you're on a non-Omarchy or non-Lua Hyprland config, the equivalent is
-`env = MANGOHUD,1` in your `hyprland.conf`.)
-
-This makes every Vulkan/OpenGL/Proton game launched in your session pick up
-MangoHud automatically — the plugin can't set this for you, since editing
-core Hyprland config from a plugin installer would be surprising and risky.
-
-Reload Hyprland (`hyprctl reload`) after adding it.
-
 ## Enabling
 
 ```
@@ -45,12 +29,24 @@ The second command is needed because `enable` only registers the plugin —
 it doesn't place the bar widget into your actual bar layout. (Put it in
 whichever section you like; `right` is just a reasonable default.)
 
-The first time it loads, it automatically adds the settings MangoHud needs
-to `~/.config/MangoHud/MangoHud.conf` (stats computation + invisible
-background logging). If you already use MangoHud with your own visible
-overlay and have conflicting settings there, it won't silently overwrite
-them — you'll get a desktop notification telling you exactly what to change
-instead.
+That's it — everything else is automatic the first time it loads:
+
+- It adds `MANGOHUD=1` to your Hyprland config so every Vulkan/OpenGL/Proton
+  game picks up MangoHud, without you having to find and edit the right
+  file yourself (Omarchy installs use either a Lua config or the classic
+  `hyprland.conf` format — it detects and handles either one). This only
+  ever *adds* a line, never touches anything else, and automatically
+  verifies the change didn't break your Hyprland config — rolling itself
+  back with a desktop notification if it ever did, rather than leaving
+  things broken.
+- It adds the settings MangoHud needs to `~/.config/MangoHud/MangoHud.conf`
+  (stats computation + invisible background logging). If you already use
+  MangoHud with your own visible overlay and have conflicting settings
+  there, it won't silently overwrite them — you'll get a desktop
+  notification telling you exactly what to change instead.
+
+If you ever want to do either step by hand instead, see
+[Manual setup](#manual-setup) below.
 
 ## Customizing
 
@@ -88,6 +84,22 @@ a settings file living there would trigger a full plugin reload on every single 
 
 `position` is one of `top-left`, `top-center`, `top-right`, `bottom-left`,
 `bottom-center`, `bottom-right`.
+
+## Manual setup
+
+The plugin sets this up automatically on first load (see [Enabling](#enabling)
+above). If that ever fails on an unusual setup, here's the equivalent by hand:
+
+Add this line to your `~/.config/hypr/hyprland.lua`, in the personal
+overrides section near the bottom:
+
+```lua
+hl.env("MANGOHUD", "1")
+```
+
+(If you're on a non-Omarchy or non-Lua Hyprland config, the equivalent is
+`env = MANGOHUD,1` in your `hyprland.conf`.) Reload Hyprland (`hyprctl
+reload`) after adding it.
 
 ## Credits
 
