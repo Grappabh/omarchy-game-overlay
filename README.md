@@ -18,18 +18,27 @@ Install MangoHud itself (the plugin drives it, but doesn't install it):
 sudo pacman -S mangohud lib32-mangohud
 ```
 
-## Enabling
+## Installing
+
+Not published to plugins.omarchy.org yet, so install straight from this repo:
 
 ```
-omarchy plugin enable game-overlay
-omarchy bar put game-overlay --section right
+omarchy plugin add https://github.com/Grappabh/omarchy-game-overlay --enable
 ```
 
-The second command is needed because `enable` only registers the plugin —
-it doesn't place the bar widget into your actual bar layout. (Put it in
-whichever section you like; `right` is just a reasonable default.)
+That one command clones it, enables it, and (interactively) asks which bar
+section to place the widget in — defaulting to the right side. Running
+non-interactively (e.g. scripted, or with `--yes`)? It'll skip that prompt
+and enable without a bar placement; just run this afterward:
 
-That's it — everything else is automatic the first time it loads:
+```
+omarchy plugin enable game-overlay --section right
+```
+
+(That second form also works standalone if you ever disable and re-enable
+the plugin later — no need to re-add it from git again.)
+
+Everything else is automatic the first time it loads:
 
 - It adds `MANGOHUD=1` to your Hyprland config so every Vulkan/OpenGL/Proton
   game picks up MangoHud, without you having to find and edit the right

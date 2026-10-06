@@ -19,6 +19,7 @@
     "displayName": "Game overlay",
     "description": "Shows while a game is running; click to adjust the overlay's appearance",
     "category": "Monitoring",
-    "allowMultiple": false
+    "allowMultiple": false,
+    "defaultSection": "right"
   }
 }
