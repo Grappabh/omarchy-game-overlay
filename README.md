@@ -1,8 +1,8 @@
 # Pill overlay
+<img width="2548" height="1432" alt="Ingame overlay" src="https://github.com/user-attachments/assets/e1c0dc0d-d743-47ad-8afd-89ee5d6c9a98" />
 
 A clean FPS/CPU/GPU pill shown at the top of the screen while a game is
-running — centered, dark, minimal, and only visible on the monitor that
-actually has the fullscreen game on it.
+running. Inspired by Devyn Johnston, I wanted a clean game overlay without the extra fuzz MangoHud brings in.
 
 It uses [MangoHud](https://github.com/flightlessmango/MangoHud) as a
 headless background data source (it's the only thing that can see a game's
@@ -61,6 +61,7 @@ A small pill-shaped icon appears in your bar whenever a game is actively
 running (i.e. whenever the overlay pill itself would be showing) — click it
 to open a settings popup:
 
+<img width="465" height="795" alt="Widget" src="https://github.com/user-attachments/assets/497ab652-ef1f-4a65-bd8d-15c8020d96ac" />
 - **Position** — a mini monitor with 6 clickable dots (top/bottom ×
   left/center/right) for where the pill sits on screen.
 - **Font size** / **Opacity** — sliders.
