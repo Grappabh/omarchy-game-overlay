@@ -50,15 +50,21 @@ BarWidget {
   implicitWidth: button.implicitWidth
   implicitHeight: button.implicitHeight
 
-  // The same visual/interaction primitive every other bar-widget plugin
-  // uses (clock, network, ...) — gets us the shared hover highlight, tooltip
-  // timing, and text rendering for free instead of a bespoke Text+MouseArea.
-  WidgetButton {
+  // BarIconButton (a WidgetButton that also supports a custom iconComponent,
+  // same primitive Dropbox/Tailscale's bar icons use) rather than plain
+  // WidgetButton — this shows the pill logo instead of the live "FPS <n>"
+  // text; the actual numbers still show on the overlay pill itself, this is
+  // just what's clickable in the bar.
+  BarIconButton {
     id: button
     anchors.fill: parent
     bar: root.bar
-    text: root.active ? "FPS " + root.gameService.fmtFps(root.gameService.fpsVal) : ""
-    hasVisualContent: root.active
+    iconComponent: Component {
+      PillIcon {
+        anchors.centerIn: parent
+        color: button.foreground
+      }
+    }
     onPressed: if (root.gameService) root.gameService.popupOpen = !root.gameService.popupOpen
   }
 
@@ -84,11 +90,53 @@ BarWidget {
       anchors.fill: parent
       spacing: Style.space(12)
 
-      Text {
-        text: "Game overlay"
-        color: Color.popups.text
-        font.pixelSize: Style.font.heading
-        font.bold: true
+      // Hero: pill icon · title · subtext — copied field-for-field from
+      // bluetooth's own hero (plugins/panels/bluetooth/Panel.qml), down to
+      // the font tokens and the font.family binding to root.bar.fontFamily
+      // (missing that was why the title font didn't actually match before).
+      Item {
+        width: parent.width
+        implicitHeight: Math.max(heroIcon.implicitHeight, heroLabels.implicitHeight)
+
+        PillIcon {
+          id: heroIcon
+          anchors.left: parent.left
+          anchors.verticalCenter: parent.verticalCenter
+          iconWidth: Style.space(36)
+          iconHeight: Style.space(18)
+          color: root.bar ? root.bar.foreground : Color.popups.text
+        }
+
+        Column {
+          id: heroLabels
+          anchors.left: heroIcon.right
+          anchors.leftMargin: Style.space(14)
+          anchors.right: parent.right
+          anchors.verticalCenter: parent.verticalCenter
+          spacing: Style.space(2)
+
+          Text {
+            text: "Pill overlay"
+            color: root.bar ? root.bar.foreground : Color.popups.text
+            font.family: root.bar ? root.bar.fontFamily : Style.font.family
+            font.pixelSize: Style.font.title
+            font.bold: true
+            elide: Text.ElideRight
+            width: parent.width
+          }
+
+          Text {
+            textFormat: Text.PlainText
+            text: "FPS overlay for your games".toUpperCase()
+            color: Qt.darker(root.bar ? root.bar.foreground : Color.popups.text, 1.4)
+            font.family: root.bar ? root.bar.fontFamily : Style.font.family
+            font.pixelSize: Style.font.caption
+            font.bold: true
+            font.letterSpacing: 1.2
+            elide: Text.ElideRight
+            width: parent.width
+          }
+        }
       }
 
       PanelSeparator { foreground: Color.popups.text }
