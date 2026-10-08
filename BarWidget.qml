@@ -10,6 +10,11 @@ BarWidget {
   readonly property bool active: gameService ? gameService.live : false
   readonly property bool followTheme: gameService ? gameService.settings.followTheme : false
 
+  // Which swatch the shared hue/saturation/lightness controls below are
+  // currently editing. Transient (not persisted) — resets to "label" each
+  // time the popup is recreated, which is fine for a selector like this.
+  property string colorTarget: "label"
+
   // Backed by the service (not a local property) so Super+Ctrl+1-9 — which
   // calls shell.toggle("game-overlay") and, because our manifest's kinds
   // include "panel", actually opens/closes via Panel.qml's open()/close()
@@ -34,6 +39,14 @@ BarWidget {
   // until the whole widget got recreated (e.g. by moving its bar position).
   function close() { if (root.gameService) root.gameService.popupOpen = false }
 
+  // WidgetButton below already hides itself (hasVisualContent: root.active),
+  // but that's invisible to the bar's own sizing: Bar.qml's ModuleSlot sizes
+  // off *this* root item's visible/implicitWidth, not the button it wraps.
+  // Without this, the slot kept reserving WidgetButton's ~12px minimum width
+  // even while inactive — a persistent empty gap in the bar between whatever
+  // this widget sits next to. Stays visible while the popup is open even if
+  // the game just exited, so it doesn't vanish out from under an open popup.
+  visible: root.active || root.popupOpen
   implicitWidth: button.implicitWidth
   implicitHeight: button.implicitHeight
 
@@ -155,29 +168,60 @@ BarWidget {
         }
       }
 
-      // EXPERIMENTAL: hue/saturation/lightness sliders instead of hex entry
-      // (HueColorField.qml). To revert, swap both back to ColorField with a
-      // single value/onChanged each — see git history for the exact block.
-      HueColorField {
-        label: "Label color"
+      // EXPERIMENTAL, modeled on a Figma mockup: a saturation/value box + hue
+      // slider + swatch + editable hex (ColorPickerField.qml), shared between
+      // both swatches via these two pill buttons rather than repeated per
+      // swatch. Earlier experiment (3 plain sliders: HueColorField.qml) and
+      // the original hex-only ColorField.qml are both still here, untouched,
+      // if this one doesn't stick — swap the component below for either.
+      Row {
+        id: colorTargetRow
+        width: parent.width
         visible: !root.followTheme
-        value: root.gameService ? root.gameService.settings.labelColor : "#6C9BD9"
-        onMoved: function(hex) { if (root.gameService) root.gameService.settings.labelColor = hex }
-        onReleased: function(hex) {
-          if (!root.gameService) return
-          root.gameService.settings.labelColor = hex
-          root.gameService.saveSettings()
+        spacing: Style.space(6)
+
+        readonly property real cellWidth: (width - spacing) / 2
+
+        Button {
+          text: "Label color"
+          width: colorTargetRow.cellWidth
+          fontSize: Style.font.bodySmall
+          foreground: Color.popups.text
+          horizontalPadding: Style.spacing.controlPaddingX
+          verticalPadding: Style.spacing.controlPaddingY + Style.space(2)
+          bordered: true
+          active: root.colorTarget === "label"
+          onClicked: root.colorTarget = "label"
+        }
+
+        Button {
+          text: "Background"
+          width: colorTargetRow.cellWidth
+          fontSize: Style.font.bodySmall
+          foreground: Color.popups.text
+          horizontalPadding: Style.spacing.controlPaddingX
+          verticalPadding: Style.spacing.controlPaddingY + Style.space(2)
+          bordered: true
+          active: root.colorTarget === "background"
+          onClicked: root.colorTarget = "background"
         }
       }
 
-      HueColorField {
-        label: "Background"
+      ColorPickerField {
         visible: !root.followTheme
-        value: root.gameService ? root.gameService.settings.backgroundColor : "#101518"
-        onMoved: function(hex) { if (root.gameService) root.gameService.settings.backgroundColor = hex }
+        value: {
+          if (!root.gameService) return root.colorTarget === "label" ? "#6C9BD9" : "#101518"
+          return root.colorTarget === "label" ? root.gameService.settings.labelColor : root.gameService.settings.backgroundColor
+        }
+        onMoved: function(hex) {
+          if (!root.gameService) return
+          if (root.colorTarget === "label") root.gameService.settings.labelColor = hex
+          else root.gameService.settings.backgroundColor = hex
+        }
         onReleased: function(hex) {
           if (!root.gameService) return
-          root.gameService.settings.backgroundColor = hex
+          if (root.colorTarget === "label") root.gameService.settings.labelColor = hex
+          else root.gameService.settings.backgroundColor = hex
           root.gameService.saveSettings()
         }
       }
