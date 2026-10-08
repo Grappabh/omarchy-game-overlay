@@ -62,6 +62,7 @@ running (i.e. whenever the overlay pill itself would be showing) — click it
 to open a settings popup:
 
 <img width="465" height="795" alt="Widget" src="https://github.com/user-attachments/assets/497ab652-ef1f-4a65-bd8d-15c8020d96ac" />
+
 - **Position** — a mini monitor with 6 clickable dots (top/bottom ×
   left/center/right) for where the pill sits on screen.
 - **Font size** / **Opacity** — sliders.
