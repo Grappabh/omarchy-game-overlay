@@ -1,9 +1,10 @@
 {
   "schemaVersion": 1,
-  "id": "game-overlay",
-  "name": "Game FPS/CPU/GPU overlay",
-  "version": "1.1.0",
-  "description": "Live FPS, CPU and GPU stats pill shown while a game is running, sourced from MangoHud's background logging.",
+  "id": "io.github.grappabh.pill-overlay",
+  "name": "Pill overlay",
+  "version": "2.0.0",
+  "author": "Grappabh",
+  "description": "A small pill-shaped overlay showing live FPS, CPU and GPU stats while a game is running, sourced from MangoHud's background logging.",
   "kinds": [
     "service",
     "panel",
@@ -16,7 +17,7 @@
     "barWidget": "BarWidget.qml"
   },
   "barWidget": {
-    "displayName": "Game overlay",
+    "displayName": "Pill overlay",
     "description": "Shows while a game is running; click to adjust the overlay's appearance",
     "category": "Monitoring",
     "allowMultiple": false,

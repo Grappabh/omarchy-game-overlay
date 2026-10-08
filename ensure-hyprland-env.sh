@@ -26,10 +26,10 @@ changed_lua=0
 changed_conf=0
 
 if [ -f "$LUA_FILE" ] && ! grep -q 'hl\.env("MANGOHUD"' "$LUA_FILE"; then
-  cp "$LUA_FILE" "$LUA_FILE.game-overlay-backup"
+  cp "$LUA_FILE" "$LUA_FILE.pill-overlay-backup"
   {
     echo ""
-    echo "-- Added by the game-overlay plugin: lets Vulkan/OpenGL/Proton"
+    echo "-- Added by the Pill overlay plugin: lets Vulkan/OpenGL/Proton"
     echo "-- games pick up MangoHud automatically."
     echo 'hl.env("MANGOHUD", "1")'
   } >> "$LUA_FILE"
@@ -37,10 +37,10 @@ if [ -f "$LUA_FILE" ] && ! grep -q 'hl\.env("MANGOHUD"' "$LUA_FILE"; then
 fi
 
 if [ -f "$CONF_FILE" ] && ! grep -qE '^[[:space:]]*env[[:space:]]*=[[:space:]]*MANGOHUD' "$CONF_FILE"; then
-  cp "$CONF_FILE" "$CONF_FILE.game-overlay-backup"
+  cp "$CONF_FILE" "$CONF_FILE.pill-overlay-backup"
   {
     echo ""
-    echo "# Added by the game-overlay plugin: lets Vulkan/OpenGL/Proton"
+    echo "# Added by the Pill overlay plugin: lets Vulkan/OpenGL/Proton"
     echo "# games pick up MangoHud automatically."
     echo "env = MANGOHUD,1"
   } >> "$CONF_FILE"
@@ -64,12 +64,12 @@ after_errors=$(hyprctl configerrors 2>/dev/null)
 # Only roll back if our edit is what changed the error state — a pre-existing
 # unrelated error (present both before and after) isn't ours to revert.
 if [ -n "$after_errors" ] && [ "$after_errors" != "$before_errors" ]; then
-  [ "$changed_lua" -eq 1 ] && [ -f "$LUA_FILE.game-overlay-backup" ] && mv "$LUA_FILE.game-overlay-backup" "$LUA_FILE"
-  [ "$changed_conf" -eq 1 ] && [ -f "$CONF_FILE.game-overlay-backup" ] && mv "$CONF_FILE.game-overlay-backup" "$CONF_FILE"
+  [ "$changed_lua" -eq 1 ] && [ -f "$LUA_FILE.pill-overlay-backup" ] && mv "$LUA_FILE.pill-overlay-backup" "$LUA_FILE"
+  [ "$changed_conf" -eq 1 ] && [ -f "$CONF_FILE.pill-overlay-backup" ] && mv "$CONF_FILE.pill-overlay-backup" "$CONF_FILE"
   hyprctl reload >/dev/null 2>&1
-  notify-send "game-overlay plugin" "Couldn't automatically enable MangoHud for your games (a config error was detected, so the change was rolled back). Please add it manually — see the plugin's README." 2>/dev/null || true
+  notify-send "Pill overlay plugin" "Couldn't automatically enable MangoHud for your games (a config error was detected, so the change was rolled back). Please add it manually — see the plugin's README." 2>/dev/null || true
   exit 0
 fi
 
-rm -f "$LUA_FILE.game-overlay-backup" "$CONF_FILE.game-overlay-backup" 2>/dev/null
-notify-send "game-overlay plugin" "MangoHud is now enabled automatically for games in this session." 2>/dev/null || true
+rm -f "$LUA_FILE.pill-overlay-backup" "$CONF_FILE.pill-overlay-backup" 2>/dev/null
+notify-send "Pill overlay plugin" "MangoHud is now enabled automatically for games in this session." 2>/dev/null || true

@@ -1,4 +1,4 @@
-# Game overlay
+# Pill overlay
 
 A clean FPS/CPU/GPU pill shown at the top of the screen while a game is
 running — centered, dark, minimal, and only visible on the monitor that
@@ -20,10 +20,8 @@ sudo pacman -S mangohud lib32-mangohud
 
 ## Installing
 
-Not published to plugins.omarchy.org yet, so install straight from this repo:
-
 ```
-omarchy plugin add https://github.com/Grappabh/omarchy-game-overlay --enable
+omarchy plugin add https://github.com/Grappabh/omarchy-pill-overlay --enable
 ```
 
 That one command clones it, enables it, and (interactively) asks which bar
@@ -32,7 +30,7 @@ non-interactively (e.g. scripted, or with `--yes`)? It'll skip that prompt
 and enable without a bar placement; just run this afterward:
 
 ```
-omarchy plugin enable game-overlay --section right
+omarchy plugin enable io.github.grappabh.pill-overlay --section right
 ```
 
 (That second form also works standalone if you ever disable and re-enable
@@ -59,7 +57,7 @@ If you ever want to do either step by hand instead, see
 
 ## Customizing
 
-A small **"FPS \<n\>"** item appears in your bar whenever a game is actively
+A small pill-shaped icon appears in your bar whenever a game is actively
 running (i.e. whenever the overlay pill itself would be showing) — click it
 to open a settings popup:
 
@@ -67,10 +65,11 @@ to open a settings popup:
   left/center/right) for where the pill sits on screen.
 - **Font size** / **Opacity** — sliders.
 - **Follow Omarchy theme** — a switch that, when on, uses your current
-  theme's accent/popup colors instead of the custom ones below (and greys
-  those fields out while it's on).
-- **Label color** / **Background** — hex color fields (type a `#rrggbb`
-  value directly).
+  theme's accent/popup colors instead of the custom ones below (and hides
+  those controls while it's on).
+- **Label color** / **Background** — pick which one you're editing with the
+  two pill buttons, then use the saturation/value box, hue slider, or the
+  editable hex field underneath to set it.
 - **°C / °F** — a switch for which unit temperatures are shown in.
 - **Show/hide shortcut** — a pill showing the current keyboard shortcut for
   toggling the overlay on/off while a game is running (default
@@ -78,7 +77,7 @@ to open a settings popup:
   (needs at least one modifier — Ctrl/Shift/Alt/Super); it updates live, no
   restart needed. Escape cancels without changing anything.
 
-You can also hand-edit `~/.config/omarchy/game-overlay-settings.json` directly
+You can also hand-edit `~/.config/omarchy/pill-overlay-settings.json` directly
 (auto-created with defaults on first load). It's deliberately *not* inside this plugin's own folder:
 Omarchy's plugin hot-reload watches that whole folder for source changes, so
 a settings file living there would trigger a full plugin reload on every single change in the settings.
@@ -106,7 +105,7 @@ by hand.
 
 ## Manual setup
 
-The plugin sets this up automatically on first load (see [Enabling](#enabling)
+The plugin sets this up automatically on first load (see [Installing](#installing)
 above). If that ever fails on an unusual setup, here's the equivalent by hand:
 
 Add this line to your `~/.config/hypr/hyprland.lua`, in the personal
@@ -136,7 +135,7 @@ reload`) after adding it.
   visibility.
 - The show/hide shortcut is applied two ways: live immediately (so a
   freshly recorded one works without restarting anything), and persisted to
-  `~/.config/hypr/game-overlay-shortcut.conf` (sourced once from
+  `~/.config/hypr/pill-overlay-shortcut.conf` (sourced once from
   `hyprland.conf`) so it survives an actual Hyprland restart too.
 
 ## Known limitations

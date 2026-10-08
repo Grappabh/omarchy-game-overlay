@@ -7,7 +7,7 @@ import Quickshell.Hyprland
 // watcher, MangoHud.conf provisioning, and the user settings file all live
 // here once so neither entry point duplicates them. The shell auto-injects
 // this into Panel via `service`; BarWidget looks it up explicitly through
-// `bar.shell.serviceFor("game-overlay")`.
+// `bar.shell.serviceFor("io.github.grappabh.pill-overlay")`.
 Item {
   id: root
 
@@ -91,7 +91,7 @@ Item {
     // settings there was triggering a full "Local plugin changed, reloading"
     // cycle on every single settings change — tearing down and recreating
     // the bar widget (closing its popup) as if from a code edit.
-    path: Quickshell.env("HOME") + "/.config/omarchy/game-overlay-settings.json"
+    path: Quickshell.env("HOME") + "/.config/omarchy/pill-overlay-settings.json"
     watchChanges: true
     onFileChanged: reload()
     // Loading a file that doesn't exist yet only warns and falls back to the
@@ -152,11 +152,11 @@ Item {
   }
 
   // Hit by the Hyprland keybind ensure-hyprland-shortcut.sh sets up
-  // ("omarchy-shell game-overlay toggleVisibility"). A plain show/hide flag
+  // ("omarchy-shell pill-overlay toggleVisibility"). A plain show/hide flag
   // rather than routing through the host's shell.toggle(id) machinery, since
   // that's keyed to the popup (see popupOpen above), not the pill.
   IpcHandler {
-    target: "game-overlay"
+    target: "pill-overlay"
     function toggleVisibility(): void {
       root.settings.overlayVisible = !root.settings.overlayVisible
       root.saveSettings()

@@ -4,9 +4,9 @@ import qs.Commons
 
 BarWidget {
   id: root
-  moduleName: "game-overlay"
+  moduleName: "io.github.grappabh.pill-overlay"
 
-  readonly property var gameService: bar?.shell?.serviceFor("game-overlay")
+  readonly property var gameService: bar?.shell?.serviceFor("io.github.grappabh.pill-overlay")
   readonly property bool active: gameService ? gameService.live : false
   readonly property bool followTheme: gameService ? gameService.settings.followTheme : false
 
@@ -16,7 +16,7 @@ BarWidget {
   property string colorTarget: "label"
 
   // Backed by the service (not a local property) so Super+Ctrl+1-9 — which
-  // calls shell.toggle("game-overlay") and, because our manifest's kinds
+  // calls shell.toggle(id), and, because our manifest's kinds
   // include "panel", actually opens/closes via Panel.qml's open()/close()
   // rather than ours — ends up toggling the exact same popup a direct click
   // does. See Service.qml's popupOpen for the full explanation.

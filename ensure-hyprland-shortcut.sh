@@ -1,5 +1,5 @@
 #!/bin/bash
-# Keeps the game-overlay plugin's show/hide shortcut in sync with Hyprland.
+# Keeps the Pill overlay plugin's show/hide shortcut in sync with Hyprland.
 #
 # Two things have to happen, because of a quirk in this Omarchy build's
 # Hyprland+Lua setup confirmed by hand: `hyprctl reload` does NOT re-register
@@ -29,7 +29,7 @@ set -u
 
 HYPR_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/hypr"
 CONF_FILE="$HYPR_DIR/hyprland.conf"
-SHORTCUT_FILE="$HYPR_DIR/game-overlay-shortcut.conf"
+SHORTCUT_FILE="$HYPR_DIR/pill-overlay-shortcut.conf"
 BIND="${1:-SUPER CTRL, G}"  # hyprlang syntax: "<space-separated MODS>, <key>"
 
 mods=$(echo "${BIND%%,*}" | xargs)
@@ -40,10 +40,10 @@ lua_keys=$(echo "$mods $key" | sed 's/  */ + /g')
 # persistence across a real restart — see above). Never touches anything
 # else in hyprland.conf.
 if [ -f "$CONF_FILE" ] && ! grep -qF "source = $SHORTCUT_FILE" "$CONF_FILE"; then
-  cp "$CONF_FILE" "$CONF_FILE.game-overlay-shortcut-backup"
+  cp "$CONF_FILE" "$CONF_FILE.pill-overlay-shortcut-backup"
   {
     echo ""
-    echo "# Added by the game-overlay plugin: persists its user-configurable"
+    echo "# Added by the Pill overlay plugin: persists its user-configurable"
     echo "# show/hide shortcut (recorded from the bar widget's settings"
     echo "# popup) across a real Hyprland restart."
     echo "source = $SHORTCUT_FILE"
@@ -55,21 +55,21 @@ if [ -f "$CONF_FILE" ] && ! grep -qF "source = $SHORTCUT_FILE" "$CONF_FILE"; the
     sleep 0.5
     after_errors=$(hyprctl configerrors 2>/dev/null)
     if [ -n "$after_errors" ] && [ "$after_errors" != "$before_errors" ]; then
-      mv "$CONF_FILE.game-overlay-shortcut-backup" "$CONF_FILE"
+      mv "$CONF_FILE.pill-overlay-shortcut-backup" "$CONF_FILE"
       hyprctl reload >/dev/null 2>&1
-      notify-send "game-overlay plugin" "Couldn't set up the show/hide shortcut automatically. See the plugin's README." 2>/dev/null || true
+      notify-send "Pill overlay plugin" "Couldn't set up the show/hide shortcut automatically. See the plugin's README." 2>/dev/null || true
       exit 0
     fi
   fi
-  rm -f "$CONF_FILE.game-overlay-shortcut-backup" 2>/dev/null
+  rm -f "$CONF_FILE.pill-overlay-shortcut-backup" 2>/dev/null
 fi
 
 # Fully owned by us — always safe to overwrite outright.
 cat > "$SHORTCUT_FILE" <<EOF
-# Managed by the game-overlay plugin. Re-generated whenever the shortcut is
+# Managed by the Pill overlay plugin. Re-generated whenever the shortcut is
 # re-recorded from the bar widget's settings popup — don't hand-edit.
 # (Only takes effect on a real Hyprland restart — see ensure-hyprland-shortcut.sh.)
-bindd = $mods, $key, Toggle game overlay, exec, omarchy-shell game-overlay toggleVisibility
+bindd = $mods, $key, Toggle pill overlay, exec, omarchy-shell pill-overlay toggleVisibility
 EOF
 
 command -v hyprctl >/dev/null 2>&1 || exit 0
@@ -77,7 +77,7 @@ command -v hyprctl >/dev/null 2>&1 || exit 0
 hyprctl reload >/dev/null 2>&1
 sleep 0.2
 
-result=$(hyprctl eval "o.bind(\"$lua_keys\", \"Toggle game overlay\", \"omarchy-shell game-overlay toggleVisibility\")" 2>&1)
+result=$(hyprctl eval "o.bind(\"$lua_keys\", \"Toggle pill overlay\", \"omarchy-shell pill-overlay toggleVisibility\")" 2>&1)
 if [ "$result" != "ok" ]; then
-  notify-send "game-overlay plugin" "That shortcut couldn't be applied. Try a different key combination." 2>/dev/null || true
+  notify-send "Pill overlay plugin" "That shortcut couldn't be applied. Try a different key combination." 2>/dev/null || true
 fi

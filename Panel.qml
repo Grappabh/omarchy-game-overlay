@@ -12,7 +12,7 @@ Item {
   property var service: null
 
   // Shape contract for shell.summon/hide/toggle: because our manifest's
-  // kinds include "panel", any shell.toggle("game-overlay") call (notably
+  // kinds include "panel", any shell.toggle(id) call (notably
   // from the Super+Ctrl+1-9 bar hotkeys) is routed to THIS entry point
   // rather than the bar widget's own open()/close() — see
   // isBarWidgetPanelPlugin in the host's shell.qml. Forwarding to the same
@@ -72,7 +72,7 @@ Item {
           screen: screenLoader.modelData
           anchors { top: true; bottom: true; left: true; right: true }
           color: "transparent"
-          WlrLayershell.namespace: "game-overlay"
+          WlrLayershell.namespace: "pill-overlay"
           WlrLayershell.layer: WlrLayer.Overlay
           WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
           exclusionMode: ExclusionMode.Ignore

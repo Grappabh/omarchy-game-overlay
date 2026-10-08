@@ -29,7 +29,7 @@ declare -A KV=(
 if [ ! -f "$CONF" ]; then
   {
     echo "### MangoHud runs fully invisible here (alpha=0) — it exists purely as"
-    echo "### a background stats engine + logger for the game-overlay Quickshell"
+    echo "### a background stats engine + logger for the Pill overlay Quickshell"
     echo "### plugin, which does the actual visible rendering."
     echo
     for f in "${FLAGS[@]}"; do echo "$f"; done
@@ -51,26 +51,26 @@ for k in "${!KV[@]}"; do
   if [ -z "$existing" ]; then
     missing_kv+=("$k=${KV[$k]}")
   elif [ "$existing" != "$k=${KV[$k]}" ]; then
-    conflicting_kv+=("$existing (game-overlay needs $k=${KV[$k]})")
+    conflicting_kv+=("$existing (Pill overlay needs $k=${KV[$k]})")
   fi
 done
 
 if [ ${#missing_flags[@]} -gt 0 ] || [ ${#missing_kv[@]} -gt 0 ]; then
   {
     echo
-    echo "### Added by the game-overlay plugin"
+    echo "### Added by the Pill overlay plugin"
     for f in "${missing_flags[@]}"; do echo "$f"; done
     for kv in "${missing_kv[@]}"; do echo "$kv"; done
   } >> "$CONF"
 fi
 
 if [ ${#conflicting_kv[@]} -gt 0 ]; then
-  msg="Your MangoHud.conf has settings the game-overlay plugin needs changed, but won't overwrite automatically:"
+  msg="Your MangoHud.conf has settings the Pill overlay plugin needs changed, but won't overwrite automatically:"
   for c in "${conflicting_kv[@]}"; do
     msg="$msg
 $c"
   done
   msg="$msg
 Edit $CONF to resolve."
-  notify-send "game-overlay plugin" "$msg" 2>/dev/null || true
+  notify-send "Pill overlay plugin" "$msg" 2>/dev/null || true
 fi
